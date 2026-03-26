@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ritual">
+<link rel="manifest" href="manifest.json">
+<title>Ritual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --bg2: #131316;
+    --bg3: #1a1a1f;
+    --card: #18181d;
+    --border: #2a2a32;
+    --text: #e8e6e1;
+    --muted: #6b6878;
+    --accent: #c8a97e;
+    --accent2: #7e9fc8;
+    --accent3: #9fc87e;
+    --danger: #c87e7e;
+    --glow: rgba(200, 169, 126, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: .5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(13,13,15,.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -.3px;
+    color: var(--accent);
+  }
+  .logo span { color: var(--muted); font-size: 11px; display: block; font-family: 'DM Mono'; letter-spacing: .08em; margin-top: -2px; }
+
+  .header-right { display: flex; gap: 10px; align-items: center; }
+
+  .icon-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px;
+    transition: all .2s;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tab {
+    padding: 12px 16px;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all .2s;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── MAIN ── */
+  main { padding: 20px; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+
+  .page { display: none; animation: fadeUp .3s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── DATE STRIP ── */
+  .date-strip {
+    margin-bottom: 24px;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  .date-big {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px; line-height: 1;
+    color: var(--text);
+  }
+  .date-info { color: var(--muted); font-size: 11px; letter-spacing: .06em; }
+  .date-info strong { display: block; color: var(--text); font-size: 13px; margin-bottom: 2px; }
+
+  /* ── PROGRESS RING ── */
+  .progress-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 20px;
+    position: relative; overflow: hidden;
+  }
+  .progress-card::after {
+    content: '';
+    position: absolute; top: 0; right: 0;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+  }
+
+  .ring-wrap { flex-shrink: 0; }
+  .ring-svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 5; }
+  .ring-fill { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round;
+    stroke-dasharray: 188; stroke-dashoffset: 188;
+    transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);
+  }
+  .ring-text {
+    position: absolute;
+    inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 500; color: var(--accent);
+  }
+
+  .progress-info { flex: 1; }
+  .progress-label { font-size: 11px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .progress-count { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); }
+  .progress-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-title button {
+    background: none; border: none; color: var(--accent);
+    font-family: 'DM Mono'; font-size: 10px; letter-spacing: .1em;
+    cursor: pointer; text-transform: uppercase;
+  }
+
+  /* ── HABIT CARD ── */
+  .habits-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+
+  .habit-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative; overflow: hidden;
+  }
+  .habit-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; border-radius: 14px 0 0 14px;
+    background: var(--habit-color, var(--accent));
+    opacity: 0; transition: opacity .2s;
+  }
+  .habit-card.done { border-color: rgba(200,169,126,.25); background: rgba(200,169,126,.04); }
+  .habit-card.done::before { opacity: 1; }
+
+  .habit-check {
+    width: 26px; height: 26px; flex-shrink: 0;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    background: transparent;
+  }
+  .habit-card.done .habit-check {
+    background: var(--habit-color, var(--accent));
+    border-color: var(--habit-color, var(--accent));
+  }
+
+  .habit-info { flex: 1; min-width: 0; }
+  .habit-name { font-size: 14px; color: var(--text); margin-bottom: 2px; }
+  .habit-card.done .habit-name { color: var(--muted); }
+  .habit-streak { font-size: 10px; color: var(--muted); letter-spacing: .04em; }
+  .habit-streak .fire { margin-right: 2px; }
+
+  .habit-emoji { font-size: 20px; }
+
+  /* ── ADD FORM ── */
+  .add-card {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: none;
+    animation: fadeUp .25s ease;
+  }
+  .add-card.open { display: block; }
+
+  .form-row { margin-bottom: 12px; }
+  .form-label { font-size: 10px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; display: block; }
+
+  input[type=text], select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'DM Mono'; font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--accent); }
+  select option { background: var(--bg3); }
+
+  .emoji-grid {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .emoji-opt {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg3);
+    font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s;
+  }
+  .emoji-opt.sel { border-color: var(--accent); background: var(--glow); }
+
+  .color-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-opt {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer;
+    transition: transform .15s, border-color .15s;
+  }
+  .color-opt.sel { border-color: var(--text); transform: scale(1.2); }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 14px; }
+  .btn {
+    flex: 1; padding: 10px;
+    border-radius: 10px; border: none;
+    font-family: 'DM Mono'; font-size: 12px;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-ghost { background: var(--bg3); border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { color: var(--text); }
+
+  /* ── WEEK HEATMAP ── */
+  .week-row {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 6px; margin-bottom: 24px;
+  }
+  .week-day {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 9px; color: var(--muted); gap: 2px;
+    transition: background .2s;
+  }
+  .week-day .wd-label { letter-spacing: .06em; text-transform: uppercase; }
+  .week-day .wd-count { font-size: 14px; color: var(--text); }
+  .week-day.today { border-color: var(--accent); }
+  .week-day.full { background: rgba(200,169,126,.15); }
+  .week-day.partial { background: rgba(200,169,126,.07); }
+
+  /* ── STATS PAGE ── */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .stat-label { font-size: 9px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); }
+  .stat-unit { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .heatmap-year {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(30, 1fr);
+    gap: 3px; margin-top: 10px;
+  }
+  .hm-cell {
+    aspect-ratio: 1; border-radius: 2px;
+    background: var(--bg3);
+    transition: background .2s;
+  }
+  .hm-cell[data-v="1"] { background: rgba(200,169,126,.2); }
+  .hm-cell[data-v="2"] { background: rgba(200,169,126,.45); }
+  .hm-cell[data-v="3"] { background: rgba(200,169,126,.7); }
+  .hm-cell[data-v="4"] { background: rgba(200,169,126,1); }
+
+  /* ── NOTIFICATIONS PAGE ── */
+  .notif-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .notif-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .notif-title { font-size: 14px; color: var(--text); }
+  .notif-sub { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+
+  /* TOGGLE */
+  .toggle {
+    position: relative; width: 44px; height: 24px; flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 24px; cursor: pointer;
+    transition: .3s;
+  }
+  .toggle-slider::after {
+    content: ''; position: absolute;
+    left: 3px; top: 3px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--muted);
+    transition: .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .toggle input:checked + .toggle-slider { background: rgba(200,169,126,.2); border-color: var(--accent); }
+  .toggle input:checked + .toggle-slider::after { transform: translateX(20px); background: var(--accent); }
+
+  .time-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'DM Mono'; font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+    width: 120px;
+  }
+  .time-input:focus { border-color: var(--accent); }
+
+  .notif-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .notif-row-label { font-size: 12px; color: var(--muted); }
+
+  .perm-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(200,169,126,.12);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono'; font-size: 12px;
+    letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s; margin-top: 8px;
+  }
+  .perm-btn:hover { background: rgba(200,169,126,.2); }
+  .perm-status { font-size: 11px; text-align: center; margin-top: 8px; color: var(--muted); }
+  .perm-status.granted { color: var(--accent3); }
+  .perm-status.denied { color: var(--danger); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 18px;
+    font-size: 12px; color: var(--text); letter-spacing: .04em;
+    z-index: 999; transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    white-space: nowrap; max-width: 90vw;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── CONFETTI DOT ── */
+  @keyframes burst {
+    0%   { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+  .dot { position: fixed; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; z-index: 999; animation: burst .7s ease forwards; }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+  .empty p { font-size: 12px; line-height: 1.7; }
+
+  /* ── INSTALL BANNER ── */
+  #install-banner {
+    background: rgba(200,169,126,.08);
+    border: 1px solid rgba(200,169,126,.25);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: none; align-items: center; gap: 12px;
+  }
+  #install-banner.show { display: flex; }
+  #install-banner p { flex: 1; font-size: 12px; color: var(--text); line-height: 1.5; }
+  #install-banner p span { color: var(--accent); }
+  #install-btn { 
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 8px;
+    padding: 8px 14px; font-family: 'DM Mono';
+    font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  input[type=time]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.4); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Ritual<span>щоденна рутина</span></div>
+  <div class="header-right">
+    <div class="icon-btn" id="theme-toggle" title="Тема">◐</div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-page="today">Сьогодні</button>
+  <button class="tab" data-page="stats">Статистика</button>
+  <button class="tab" data-page="notifications">Сповіщення</button>
+</nav>
+
+<main>
+
+  <!-- ═══ TODAY ═══ -->
+  <div class="page active" id="page-today">
+
+    <div id="install-banner">
+      <p>Встановіть <span>Ritual</span> на головний екран для пуш-повідомлень</p>
+      <button id="install-btn">Встановити</button>
+    </div>
+
+    <div class="date-strip">
+      <div class="date-big" id="day-num">—</div>
+      <div class="date-info"><strong id="day-name">—</strong><span id="month-year">—</span></div>
+    </div>
+
+    <div class="progress-card">
+      <div class="ring-wrap" style="position:relative;">
+        <svg class="ring-svg" viewBox="0 0 70 70">
+          <circle class="ring-bg" cx="35" cy="35" r="30"/>
+          <circle class="ring-fill" id="ring" cx="35" cy="35" r="30"/>
+        </svg>
+        <div class="ring-text" id="ring-pct">0%</div>
+      </div>
+      <div class="progress-info">
+        <div class="progress-label">Прогрес дня</div>
+        <div class="progress-count"><span id="done-count">0</span> / <span id="total-count">0</span></div>
+        <div class="progress-sub" id="progress-msg">Починаємо 🌙</div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <span>Тижень</span>
+    </div>
+    <div class="week-row" id="week-row"></div>
+
+    <div class="section-title">
+      <span>Звички</span>
+      <button id="toggle-add-btn">+ Додати</button>
+    </div>
+
+    <div class="add-card" id="add-card">
+      <div class="form-row">
+        <label class="form-label">Назва звички</label>
+        <input type="text" id="habit-name-input" placeholder="Медитація, читання...">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Іконка</label>
+        <div class="emoji-grid" id="emoji-grid"></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Колір</label>
+        <div class="color-grid" id="color-grid"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="cancel-add">Скасувати</button>
+        <button class="btn btn-primary" id="save-habit">Зберегти</button>
+      </div>
+    </div>
+
+    <div class="habits-list" id="habits-list">
+      <div class="empty" id="empty-state">
+        <div class="empty-icon">🌱</div>
+        <p>Ще немає звичок.<br>Додайте першу, щоб почати.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ STATS ═══ -->
+  <div class="page" id="page-stats">
+    <div class="section-title" style="margin-bottom:16px;"><span>Огляд</span></div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Поточна серія</div>
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-unit">🔥 днів</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Виконано всього</div>
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-unit">звичок</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Найкраща серія</div>
+        <div class="stat-value" id="stat-best">0</div>
+        <div class="stat-unit">днів</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Успішність</div>
+        <div class="stat-value" id="stat-rate">0%</div>
+        <div class="stat-unit">за 30 днів</div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:12px;"><span>Активність за 30 днів</span></div>
+    <div class="heatmap-year">
+      <div class="heatmap-grid" id="heatmap"></div>
+    </div>
+
+    <div class="section-title" style="margin:16px 0 12px;"><span>За звичками</span></div>
+    <div id="habit-stats-list"></div>
+  </div>
+
+  <!-- ═══ NOTIFICATIONS ═══ -->
+  <div class="page" id="page-notifications">
+
+    <div class="notif-card">
+      <div class="notif-header">
+        <div class="notif-title">🔔 Дозвіл на сповіщення</div>
+      </div>
+      <div class="notif-sub">Потрібен для ранкового дайджесту та вечірнього підсумку</div>
+      <button class="perm-btn" id="request-perm-btn">Дозволити сповіщення</button>
+      <div class="perm-status" id="perm-status">Статус: перевіряю...</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-header">
+        <div class="notif-title">🌅 Ранковий дайджест</div>
+        <label class="toggle">
+          <input type="checkbox" id="morning-toggle">
+          <div class="toggle-slider"></div>
+        </label>
+      </div>
+      <div class="notif-sub">Нагадування починати день з ритуалу</div>
+      <div class="notif-row">
+        <span class="notif-row-label">Час</span>
+        <input type="time" class="time-input" id="morning-time" value="08:00">
+      </div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:4px;" id="test-morning">Тест сповіщення</button>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-header">
+        <div class="notif-title">🌙 Вечірній підсумок</div>
+        <label class="toggle">
+          <input type="checkbox" id="evening-toggle">
+          <div class="toggle-slider"></div>
+        </label>
+      </div>
+      <div class="notif-sub">Підсумок того, що вдалося зробити сьогодні</div>
+      <div class="notif-row">
+        <span class="notif-row-label">Час</span>
+        <input type="time" class="time-input" id="evening-time" value="21:00">
+      </div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:4px;" id="test-evening">Тест сповіщення</button>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-header">
+        <div class="notif-title">ℹ️ Як встановити</div>
+      </div>
+      <div class="notif-sub">Для повноцінних пуш-повідомлень встановіть додаток на головний екран:</div>
+      <div style="font-size:12px; color:var(--muted); line-height:1.8;">
+        <div>📱 <strong style="color:var(--text)">iOS Safari:</strong> Поділитись → На екран Дому</div>
+        <div>🤖 <strong style="color:var(--text)">Android Chrome:</strong> Меню → Встановити додаток</div>
+        <div>💻 <strong style="color:var(--text)">Desktop:</strong> Іконка ↓ в адресному рядку</div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const EMOJIS = ['🧘','📚','🏃','💧','🥗','✍️','🎯','💪','🎨','🎵','🌿','🛌','☕','🧠','🏋️','🚴'];
+const COLORS = ['#c8a97e','#7e9fc8','#9fc87e','#c87e9f','#c87e7e','#9e7ec8','#7ec8c4','#c8c07e'];
+
+function todayKey() { return new Date().toISOString().slice(0,10); }
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem('ritual_v2') || '{}'); } catch { return {}; }
+}
+function saveData(d) { localStorage.setItem('ritual_v2', JSON.stringify(d)); }
+
+function getState() {
+  const d = loadData();
+  return {
+    habits: d.habits || [],
+    log:    d.log    || {},
+    notif:  d.notif  || { morning: false, evening: false, morningTime: '08:00', eveningTime: '21:00' },
+  };
+}
+function setState(s) { saveData(s); }
+
+let state = getState();
+
+// ═══════════════════════════════════════════════
+// DATE
+// ═══════════════════════════════════════════════
+function updateDate() {
+  const now = new Date();
+  const days = ['Неділя','Понеділок','Вівторок','Середа','Четвер','П\'ятниця','Субота'];
+  const months = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+  document.getElementById('day-num').textContent = now.getDate();
+  document.getElementById('day-name').textContent = days[now.getDay()];
+  document.getElementById('month-year').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+// ═══════════════════════════════════════════════
+// RENDER HABITS
+// ═══════════════════════════════════════════════
+function renderHabits() {
+  const list = document.getElementById('habits-list');
+  const empty = document.getElementById('empty-state');
+  const today = todayKey();
+  const done = state.log[today] || [];
+
+  list.innerHTML = '';
+
+  if (state.habits.length === 0) {
+    list.appendChild(empty);
+    updateProgress(0, 0);
+    return;
+  }
+
+  state.habits.forEach((h, i) => {
+    const isDone = done.includes(h.id);
+    const streak = calcStreak(h.id);
+
+    const card = document.createElement('div');
+    card.className = 'habit-card' + (isDone ? ' done' : '');
+    card.style.setProperty('--habit-color', h.color);
+    card.innerHTML = `
+      <div class="habit-check">${isDone ? '✓' : ''}</div>
+      <div class="habit-emoji">${h.emoji}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak"><span class="fire">🔥</span>${streak} день поспіль</div>
+      </div>
+      <div class="icon-btn" style="font-size:12px;" data-del="${h.id}" title="Видалити">✕</div>
+    `;
+
+    card.addEventListener('click', (e) => {
+      if (e.target.dataset.del) { deleteHabit(h.id); return; }
+      toggleHabit(h.id, !isDone, card);
+    });
+
+    list.appendChild(card);
+  });
+
+  updateProgress(done.length, state.habits.length);
+}
+
+function toggleHabit(id, doMark, card) {
+  const today = todayKey();
+  if (!state.log[today]) state.log[today] = [];
+
+  if (doMark) {
+    if (!state.log[today].includes(id)) state.log[today].push(id);
+    burst(card);
+  } else {
+    state.log[today] = state.log[today].filter(x => x !== id);
+  }
+  setState(state);
+  renderHabits();
+  renderWeek();
+  renderStats();
+}
+
+function deleteHabit(id) {
+  state.habits = state.habits.filter(h => h.id !== id);
+  setState(state);
+  renderHabits();
+  renderWeek();
+  renderStats();
+  showToast('Звичку видалено');
+}
+
+function calcStreak(id) {
+  let streak = 0;
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  while (true) {
+    const key = d.toISOString().slice(0,10);
+    const logged = state.log[key] || [];
+    if (!logged.includes(id)) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+// ═══════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════
+function updateProgress(done, total) {
+  const pct = total === 0 ? 0 : Math.round(done / total * 100);
+  const circumference = 2 * Math.PI * 30; // r=30
+  const offset = circumference - (pct / 100) * circumference;
+
+  document.getElementById('ring').style.strokeDashoffset = offset;
+  document.getElementById('ring-pct').textContent = pct + '%';
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('total-count').textContent = total;
+
+  const msgs = ['Починаємо 🌙','Хороший старт ✨','На половині 💫','Майже готово 🔥','Ідеальний день! 🎯'];
+  const idx = total === 0 ? 0 : Math.min(Math.floor(pct / 25), 4);
+  document.getElementById('progress-msg').textContent = msgs[idx];
+}
+
+// ═══════════════════════════════════════════════
+// WEEK ROW
+// ═══════════════════════════════════════════════
+function renderWeek() {
+  const row = document.getElementById('week-row');
+  row.innerHTML = '';
+  const labels = ['Нд','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const logged = (state.log[key] || []).length;
+    const total = state.habits.length;
+
+    let cls = '';
+    if (logged > 0 && logged >= total && total > 0) cls = ' full';
+    else if (logged > 0) cls = ' partial';
+    if (i === 0) cls += ' today';
+
+    const el = document.createElement('div');
+    el.className = 'week-day' + cls;
+    el.innerHTML = `<div class="wd-label">${labels[d.getDay()]}</div><div class="wd-count">${logged || '—'}</div>`;
+    row.appendChild(el);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+function renderStats() {
+  // heatmap 30 days
+  const hm = document.getElementById('heatmap');
+  hm.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  let totalDone = 0, daysWithAll = 0;
+
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const logged = (state.log[key] || []).length;
+    totalDone += logged;
+    const total = state.habits.length;
+    let v = 0;
+    if (total > 0) {
+      const ratio = logged / total;
+      if (ratio >= 1) { v = 4; daysWithAll++; }
+      else if (ratio >= .75) v = 3;
+      else if (ratio >= .5) v = 2;
+      else if (ratio > 0) v = 1;
+    }
+    const cell = document.createElement('div');
+    cell.className = 'hm-cell';
+    cell.dataset.v = v;
+    hm.appendChild(cell);
+  }
+
+  // streak
+  const streak = calcOverallStreak();
+  document.getElementById('stat-streak').textContent = streak;
+  document.getElementById('stat-total').textContent = totalDone;
+  document.getElementById('stat-best').textContent = streak; // simplified
+  const rate = daysWithAll > 0 ? Math.round(daysWithAll / 30 * 100) : 0;
+  document.getElementById('stat-rate').textContent = rate + '%';
+
+  // per habit
+  const habitList = document.getElementById('habit-stats-list');
+  habitList.innerHTML = '';
+  if (state.habits.length === 0) {
+    habitList.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><p>Додайте звички щоб бачити статистику</p></div>';
+    return;
+  }
+
+  state.habits.forEach(h => {
+    const streak = calcStreak(h.id);
+    let cnt = 0;
+    for (const key in state.log) {
+      if ((state.log[key] || []).includes(h.id)) cnt++;
+    }
+    const el = document.createElement('div');
+    el.className = 'stat-card';
+    el.style.marginBottom = '10px';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span style="font-size:22px;">${h.emoji}</span>
+        <div>
+          <div style="font-size:14px;color:var(--text);">${h.name}</div>
+          <div style="font-size:10px;color:var(--muted);letter-spacing:.06em;">🔥 ${streak} днів поспіль · ${cnt} разів всього</div>
+        </div>
+        <div style="margin-left:auto;width:10px;height:10px;border-radius:50%;background:${h.color};"></div>
+      </div>
+    `;
+    habitList.appendChild(el);
+  });
+}
+
+function calcOverallStreak() {
+  let streak = 0;
+  const d = new Date(); d.setHours(0,0,0,0);
+  const total = state.habits.length;
+  if (total === 0) return 0;
+  while (true) {
+    const key = d.toISOString().slice(0,10);
+    const logged = (state.log[key] || []).length;
+    if (logged < total) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+// ═══════════════════════════════════════════════
+// ADD HABIT FORM
+// ═══════════════════════════════════════════════
+let selEmoji = '🧘', selColor = COLORS[0];
+
+function initForm() {
+  const eg = document.getElementById('emoji-grid');
+  EMOJIS.forEach(e => {
+    const el = document.createElement('div');
+    el.className = 'emoji-opt' + (e === selEmoji ? ' sel' : '');
+    el.textContent = e;
+    el.addEventListener('click', () => {
+      selEmoji = e;
+      eg.querySelectorAll('.emoji-opt').forEach(x => x.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+    eg.appendChild(el);
+  });
+
+  const cg = document.getElementById('color-grid');
+  COLORS.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'color-opt' + (c === selColor ? ' sel' : '');
+    el.style.background = c;
+    el.addEventListener('click', () => {
+      selColor = c;
+      cg.querySelectorAll('.color-opt').forEach(x => x.classList.remove('sel'));
+      el.classList.add('sel');
+    });
+    cg.appendChild(el);
+  });
+}
+
+document.getElementById('toggle-add-btn').addEventListener('click', () => {
+  document.getElementById('add-card').classList.toggle('open');
+});
+document.getElementById('cancel-add').addEventListener('click', () => {
+  document.getElementById('add-card').classList.remove('open');
+});
+document.getElementById('save-habit').addEventListener('click', () => {
+  const name = document.getElementById('habit-name-input').value.trim();
+  if (!name) { showToast('Введіть назву звички'); return; }
+  state.habits.push({ id: Date.now().toString(), name, emoji: selEmoji, color: selColor });
+  setState(state);
+  document.getElementById('habit-name-input').value = '';
+  document.getElementById('add-card').classList.remove('open');
+  renderHabits();
+  renderWeek();
+  renderStats();
+  showToast('Звичку додано ✨');
+});
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.page).classList.add('active');
+    if (tab.dataset.page === 'stats') renderStats();
+  });
+});
+
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════
+function checkPermission() {
+  const status = document.getElementById('perm-status');
+  const btn = document.getElementById('request-perm-btn');
+  if (!('Notification' in window)) {
+    status.textContent = 'Статус: не підтримується браузером';
+    status.className = 'perm-status denied';
+    btn.style.display = 'none';
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    status.textContent = '✓ Дозвіл надано';
+    status.className = 'perm-status granted';
+    btn.style.display = 'none';
+  } else if (Notification.permission === 'denied') {
+    status.textContent = '✕ Заблоковано — дозвольте в налаштуваннях браузера';
+    status.className = 'perm-status denied';
+  } else {
+    status.textContent = 'Статус: очікує дозволу';
+    status.className = 'perm-status';
+  }
+}
+
+document.getElementById('request-perm-btn').addEventListener('click', async () => {
+  if (!('Notification' in window)) return;
+  const result = await Notification.requestPermission();
+  checkPermission();
+  if (result === 'granted') showToast('Сповіщення увімкнено ✓');
+});
+
+function sendNotif(title, body) {
+  if (Notification.permission !== 'granted') {
+    showToast('Спочатку дозвольте сповіщення');
+    return;
+  }
+  new Notification(title, { body, icon: 'icon-192.png', badge: 'icon-192.png' });
+}
+
+document.getElementById('test-morning').addEventListener('click', () => {
+  const done = (state.log[todayKey()] || []).length;
+  const total = state.habits.length;
+  sendNotif('🌅 Доброго ранку!', `Сьогодні ${total} звичок чекають на тебе. Починаємо? 💪`);
+});
+
+document.getElementById('test-evening').addEventListener('click', () => {
+  const done = (state.log[todayKey()] || []).length;
+  const total = state.habits.length;
+  sendNotif('🌙 Підсумок дня', `Виконано ${done} з ${total} звичок. ${done === total ? 'Ідеальний день! 🎯' : 'Завтра буде краще ✨'}`);
+});
+
+// Save notification settings
+function loadNotifSettings() {
+  document.getElementById('morning-toggle').checked = state.notif.morning;
+  document.getElementById('evening-toggle').checked = state.notif.evening;
+  document.getElementById('morning-time').value = state.notif.morningTime;
+  document.getElementById('evening-time').value = state.notif.eveningTime;
+}
+
+['morning-toggle','evening-toggle','morning-time','evening-time'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    state.notif.morning = document.getElementById('morning-toggle').checked;
+    state.notif.evening = document.getElementById('evening-toggle').checked;
+    state.notif.morningTime = document.getElementById('morning-time').value;
+    state.notif.eveningTime = document.getElementById('evening-time').value;
+    setState(state);
+    scheduleNotifications();
+  });
+});
+
+let notifTimers = [];
+function scheduleNotifications() {
+  notifTimers.forEach(t => clearTimeout(t));
+  notifTimers = [];
+
+  function scheduleAt(timeStr, title, bodyFn) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const now = new Date();
+    const target = new Date();
+    target.setHours(h, m, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1);
+    const ms = target - now;
+    const t = setTimeout(() => {
+      sendNotif(title, bodyFn());
+      scheduleAt(timeStr, title, bodyFn); // reschedule next day
+    }, ms);
+    notifTimers.push(t);
+  }
+
+  if (state.notif.morning) {
+    scheduleAt(state.notif.morningTime, '🌅 Доброго ранку!', () => {
+      return `${state.habits.length} звичок на сьогодні. Починаємо? 💪`;
+    });
+  }
+  if (state.notif.evening) {
+    scheduleAt(state.notif.eveningTime, '🌙 Підсумок дня', () => {
+      const done = (state.log[todayKey()] || []).length;
+      const total = state.habits.length;
+      return `Виконано ${done} з ${total}. ${done === total ? 'Ідеальний день! 🎯' : 'Завтра краще ✨'}`;
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CONFETTI BURST
+// ═══════════════════════════════════════════════
+function burst(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = ['#c8a97e','#7e9fc8','#9fc87e','#c87e9f'];
+  for (let i = 0; i < 8; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    const angle = (i / 8) * Math.PI * 2;
+    const dist = 40 + Math.random() * 30;
+    dot.style.cssText = `left:${cx}px;top:${cy}px;background:${colors[i%4]};--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;`;
+    document.body.appendChild(dot);
+    setTimeout(() => dot.remove(), 700);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════
+// PWA INSTALL
+// ═══════════════════════════════════════════════
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner').classList.remove('show');
+  if (outcome === 'accepted') showToast('Додаток встановлено! 🎉');
+});
+
+// ═══════════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+updateDate();
+initForm();
+renderHabits();
+renderWeek();
+checkPermission();
+loadNotifSettings();
+scheduleNotifications();
+</script>
+</body>
+</html>
